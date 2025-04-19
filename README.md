@@ -1,4 +1,17 @@
-## Creating a New Subclass
+## Core Usage
+
+Core usage handles cv2 windowing, rendering and descendant updates for you.
+
+### Creating a New Subclass
+
+
+## Advanced Usage
+
+Alternatively, Advanced Usage gives you more control, while still facilitating tree-like updating od descendants
+
+### Creating a New Subclass
+
+You can create subclasses of ImageTool directly, giving you more control over cv2 windowing and the tree structure
 
 Be aware that update_matrix is called only when cv2.createTrackbar is called and when the trackbar value changes.
 Therefore, if you do not create a trackbar, your update_matrix will never be called and self.get_image will return
