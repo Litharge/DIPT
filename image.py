@@ -11,6 +11,10 @@ import cv2
 import numpy as np
 
 
+class DisplayException(Exception):
+    pass
+
+
 class ImageTool:
     def add_child(self, to_add):
         print("adding child", to_add, "to", self)
@@ -49,7 +53,19 @@ class ImageTool:
             child.terminate_recursively()
 
     def display(self):
-        cv2.imshow(self.window_name, self.get_image())
+        new_title = self.window_name
+
+        try:
+            cv2.imshow(self.window_name, self.get_image())
+        except Exception as e:
+            if self.display_blank_on_error:
+                new_title = "Error displaying image"
+            else:
+                raise DisplayException("Error displaying with cv2.imshow in base display method. "
+                      "Check that your input image is not None.")
+
+        cv2.setWindowTitle(self.window_name, new_title)
+
 
     def __init__(self, input_image: np.ndarray | ImageTool, window_name):
         """
@@ -59,6 +75,8 @@ class ImageTool:
         """
         self.window_name = window_name
         cv2.namedWindow(self.window_name)
+
+        self.display_blank_on_error = True
 
         self.image = None
         self.matrix_lock = threading.Lock()
