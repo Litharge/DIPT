@@ -151,9 +151,12 @@ class CustomImageTool(ImageTool, ABC):
             cv2.createTrackbar(var_name, self.window_name, bar_vars_initial[var_name], bar_vars_max[var_name],
                                partial(self.bar_changed, var_name))
 
+        all_zero = not any([bar_vars_initial[v] for v in bar_vars_initial])
+
         # if there are no trackbars created, then update_matrix is not called until a change in the parent is detected.
+        # also, if the trackbar values are initialised at 0, then it appears the callback does not run either
         # So, manually call update_matrix here
-        if len(bar_vars) == 0:
+        if len(bar_vars) == 0 or all_zero:
             self.update_matrix()
 
 

@@ -44,16 +44,20 @@ class HueBoundaryAdjuster(CustomImageTool):
 
 class NoiseRemover(CustomImageTool):
     def __init__(self, input_image, window_name):
-        self.erosion_radius_val = 0
+        self.erosion_dilation_radius_val = 0
 
-        self.erosion_radius_val_max = 5
+        self.erosion_dilation_radius_val_max = 5
 
         super().__init__(input_image, window_name)
 
     def matrix_operation(self):
-        ellipse = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
-                                            (2 * self.erosion_radius_val - 1, 2 * self.erosion_radius_val - 1))
-        self.buffer_image = cv2.erode(self.input.get_image(), ellipse)
+        if self.erosion_dilation_radius_val > 0:
+            ellipse = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
+                                                (2 * self.erosion_dilation_radius_val - 1, 2 * self.erosion_dilation_radius_val - 1))
+            eroded = cv2.erode(self.input.get_image(), ellipse)
+            self.buffer_image = cv2.dilate(eroded, ellipse)
+        else:
+            self.buffer_image = self.input.get_image()
 
 
 class HoleRemover(CustomImageTool):
@@ -89,9 +93,11 @@ hue = HueImage(initial, "hue")
 
 hue_band = HueBoundaryAdjuster(hue, "hue band")
 
-# NoiseRemover is actually not suitable, the
-#red_noise_remover = NoiseRemover(hue_band.image)
-
 hole_filled = HoleRemover(hue_band, "hole filled")
+
+# NoiseRemover is actually not suitable, the
+red_noise_remover = NoiseRemover(hue_band, "noise removed")
+
+hole_filled_2 = HoleRemover(red_noise_remover, "hole filled after noise removed")
 
 initial.display_loop(refresh_ms=100)
