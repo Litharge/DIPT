@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 
-from image import ImageTool, SimpleImage
+from dipt.image import ImageTool, SimpleImage
 
 
 class HueImage(ImageTool):
