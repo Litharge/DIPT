@@ -1,0 +1,17 @@
+[project]
+name = "dipt"
+version = "1.0.0"
+authors = [
+  { name="Robert Chambers", email="1robertchambers@gmail.com" },
+]
+description = "Adjustable Digital Image Processing pipelines, with tree structure"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "opencv-python",
+    "numpy"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]

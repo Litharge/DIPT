@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from datetime import datetime
 
-from image import SimpleImage, CustomImageTool
+from dipt.image import SimpleImage, CustomImageTool
 
 
 class HueImage(CustomImageTool):
