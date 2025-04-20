@@ -132,7 +132,7 @@ class CustomImageTool(ImageTool, ABC):
         self.matrix_operation()
 
         with self.matrix_lock:
-            self.image = self.temp_image
+            self.image = self.buffer_image
 
     def bar_changed(self, to_change, val):
         setattr(self, to_change, val)
@@ -142,7 +142,7 @@ class CustomImageTool(ImageTool, ABC):
     def __init__(self, input_image: ImageTool, window_name):
         super().__init__(input_image, window_name)
 
-        self.temp_image = None
+        self.buffer_image = None
 
         bar_vars = [v for v in vars(self) if v[-4:] == "_val"]
         bar_vars_max = {v: vars(self)[v + "_max"] for v in bar_vars}
@@ -152,6 +152,11 @@ class CustomImageTool(ImageTool, ABC):
         for var_name in bar_vars_max:
             cv2.createTrackbar(var_name, self.window_name, bar_vars_initial[var_name], bar_vars_max[var_name],
                                partial(self.bar_changed, var_name))
+
+        # if there are no trackbars created, then update_matrix is not called until a change in the parent is detected.
+        # So, manually call update_matrix here
+        if len(bar_vars) == 0:
+            self.update_matrix()
 
 
 class SimpleImage(ImageTool):

@@ -22,7 +22,7 @@ class HueImage(CustomImageTool):
         print(hue_channel.max())
 
         # convert to uint8 range (0-255), also rotate by 128 to place the discontinuity at the blue end
-        self.temp_image = ((hue_channel * (256 / 180)) + self.discontinuity_val).astype(np.uint8)
+        self.buffer_image = ((hue_channel * (256 / 180)) + self.discontinuity_val).astype(np.uint8)
 
 
 class HueBoundaryAdjuster(CustomImageTool):
@@ -37,7 +37,7 @@ class HueBoundaryAdjuster(CustomImageTool):
 
     def matrix_operation(self):
         cv2.setWindowTitle(self.window_name, "My New Window " + str(datetime.now()))
-        self.temp_image = np.where((self.input.get_image() > self.hue_min_val) & (self.input.get_image() < self.hue_max_val), 255,
+        self.buffer_image = np.where((self.input.get_image() > self.hue_min_val) & (self.input.get_image() < self.hue_max_val), 255,
                               0).astype(
             np.uint8)
 
@@ -53,7 +53,7 @@ class NoiseRemover(CustomImageTool):
     def matrix_operation(self):
         ellipse = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
                                             (2 * self.erosion_radius_val - 1, 2 * self.erosion_radius_val - 1))
-        self.temp_image = cv2.erode(self.input.get_image(), ellipse)
+        self.buffer_image = cv2.erode(self.input.get_image(), ellipse)
 
 
 class HoleRemover(CustomImageTool):
@@ -77,9 +77,9 @@ class HoleRemover(CustomImageTool):
 
         line_width = -1 if self.remove_holes_val else 1
 
-        self.temp_image = None
+        self.buffer_image = None
         for ct in contours:
-            self.temp_image = cv2.drawContours(three_channel, [ct], 0, (0, 255, 0), line_width)
+            self.buffer_image = cv2.drawContours(three_channel, [ct], 0, (0, 255, 0), line_width)
 
 original_image = cv2.imread("strawberry_2.png", cv2.IMREAD_COLOR_BGR)
 
