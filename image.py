@@ -5,6 +5,9 @@ import threading
 import time
 from functools import partial
 from abc import ABC, abstractmethod
+from datetime import datetime
+import time
+from time import monotonic
 
 
 import cv2
@@ -52,7 +55,10 @@ class ImageTool:
         for child in self.children:
             child.terminate_recursively()
 
-    def display(self):
+    def display_recursively(self):
+        for child in self.children:
+            child.display_recursively()
+
         new_title = self.window_name
 
         try:
@@ -66,6 +72,25 @@ class ImageTool:
 
         cv2.setWindowTitle(self.window_name, new_title)
 
+    def display_loop(self, refresh_ms=100):
+        """
+        Frames refresh each self.refresh_ms miliseconds or longer
+        """
+        while True:
+            old_time = int(monotonic() * 1000)
+
+            self.display_recursively()
+
+            new_time = int(monotonic() * 1000)
+            diff = new_time - old_time
+
+            k = cv2.waitKey(refresh_ms - diff)
+            if k == ord("q"):
+                break
+
+        self.terminate_recursively()
+
+        cv2.destroyAllWindows()
 
     def __init__(self, input_image: np.ndarray | ImageTool, window_name):
         """
@@ -100,6 +125,7 @@ class CustomImageTool(ImageTool, ABC):
     @abstractmethod
     def matrix_operation(self):
         pass
+
     def update_matrix(self):
         self.notify_children()
 
@@ -124,10 +150,8 @@ class CustomImageTool(ImageTool, ABC):
 
         self.partial_callbacks = {}
         for var_name in bar_vars_max:
-            # note: the init values must be lower < higher
             cv2.createTrackbar(var_name, self.window_name, bar_vars_initial[var_name], bar_vars_max[var_name],
                                partial(self.bar_changed, var_name))
-
 
 
 class SimpleImage(ImageTool):
@@ -140,6 +164,3 @@ class SimpleImage(ImageTool):
         """
         super().__init__(input_image, window_name)
         self.image = self.input
-
-
-

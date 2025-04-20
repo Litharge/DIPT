@@ -139,19 +139,4 @@ hue_band = HueBoundaryAdjuster(hue, "hue band")
 
 hole_filled = HoleRemover(hue_band, "hole filled")
 
-print(f"{hue_band.children=}")
-
-while True:
-    initial.display()
-    hue.display()
-    hue_band.display()
-    hole_filled.display()
-
-    k = cv2.waitKey(1000)
-    if k == ord("q"):
-        break
-    print("loop")
-
-initial.terminate_recursively()
-
-cv2.destroyAllWindows()
+initial.display_loop()
