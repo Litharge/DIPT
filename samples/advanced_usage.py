@@ -50,11 +50,11 @@ class HueBoundaryAdjuster(ImageTool):
     def update_matrix(self):
         self.notify_children()
 
-        temp_image = np.where((self.input.get_image() > self.hue_min) & (self.input.get_image() < self.hue_max), 255, 0).astype(
+        buffer_image = np.where((self.input.get_image() > self.hue_min) & (self.input.get_image() < self.hue_max), 255, 0).astype(
                 np.uint8)
 
         with self.matrix_lock:
-            self.image = temp_image
+            self.image = buffer_image
 
     def __init__(self, input_image: ImageTool, window_name):
         super().__init__(input_image, window_name)
@@ -70,22 +70,35 @@ class NoiseRemover(ImageTool):
     """Does erosion"""
     def __init__(self, input_image: ImageTool, window_name):
         super().__init__(input_image, window_name)
-        self.erosion_radius = 0
+        self.erosion_dilation_radius_val = 0
+
+        self.erosion_dilation_radius_val_max = 5
+
+        cv2.createTrackbar("Erosion Dilation Radius", self.window_name, self.erosion_dilation_radius_val,
+                           self.erosion_dilation_radius_val_max, self.erosion_changed)
+
+        if self.erosion_dilation_radius_val == 0:
+            self.update_matrix()
 
     def erosion_changed(self, val):
-        self.erosion_radius = val
+        self.erosion_dilation_radius_val = val
 
         self.update_matrix()
 
     def update_matrix(self):
         self.notify_children()
 
-        ellipse = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
-                                            (2 * self.erosion_radius - 1, 2 * self.erosion_radius - 1))
-        temp_image = cv2.erode(self.input.get_image(), ellipse)
+        if self.erosion_dilation_radius_val > 0:
+            ellipse = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
+                                                (2 * self.erosion_dilation_radius_val - 1,
+                                                 2 * self.erosion_dilation_radius_val - 1))
+            eroded = cv2.erode(self.input.get_image(), ellipse)
+            buffer_image = cv2.dilate(eroded, ellipse)
+        else:
+            buffer_image = self.input.get_image()
 
         with self.matrix_lock:
-            self.image = temp_image
+            self.image = buffer_image
 
 
 class HoleRemover(ImageTool):
@@ -110,12 +123,12 @@ class HoleRemover(ImageTool):
 
         line_width = -1 if self.remove_holes else 1
 
-        temp_image = None
+        buffer_image = None
         for ct in contours:
-            temp_image = cv2.drawContours(three_channel, [ct], 0, (0, 255, 0), line_width)
+            buffer_image = cv2.drawContours(three_channel, [ct], 0, (0, 255, 0), line_width)
 
         with self.matrix_lock:
-            self.image = temp_image
+            self.image = buffer_image
 
 
     def __init__(self, input_image: ImageTool, window_name: str,):
@@ -134,9 +147,11 @@ hue = HueImage(initial, "hue")
 
 hue_band = HueBoundaryAdjuster(hue, "hue band")
 
-# NoiseRemover is actually not suitable, the
-#red_noise_remover = NoiseRemover(hue_band.image)
-
 hole_filled = HoleRemover(hue_band, "hole filled")
 
-initial.display_loop()
+# NoiseRemover is actually not suitable, the
+red_noise_remover = NoiseRemover(hue_band, "noise removed")
+
+hole_filled_2 = HoleRemover(red_noise_remover, "hole filled after noise removed")
+
+initial.display_loop(refresh_ms=100)
