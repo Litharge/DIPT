@@ -8,9 +8,15 @@ structure, where the root is the original image.
 
 Clone the repository
 
+Install locally with pip, pipenv etc
+
+    python -m pipenv install -e <path to DIPT>
+
 ## Core Usage
 
 Core usage handles cv2 windowing, rendering and descendant updates for you.
+
+See samples/core_usage.py for an example of a simple tree
 
 ### Defining an Operation
 
@@ -22,7 +28,10 @@ The \_\_init\_\_ method contains any slider variables you intend to use in your 
 values of those slider variables. 
 
 The matrix_operation method contains your operation (e.g. morphological, convolutional). Get the contents of 
-the parent node with self.input.get_image(), perform your operation and save your result in self.buffer_image
+the parent node with self.input.get_image(), perform your operation and save your result in self.buffer_image.
+
+You must use self.input.get_image() and not self.input.image as the matrix may be accessed in another thread, get_image
+opens the lock.
 
 ### Building your Pipeline Tree
 
@@ -34,21 +43,11 @@ Begin rendering by calling `display_loop` on your root element
 
 Alternatively, Advanced Usage gives you more control, while still facilitating tree-like updating od descendants
 
+See samples/advanced_usage.py for an example of a simple tree
+
 ### Creating a New Subclass
 
 You can create subclasses of ImageTool directly, giving you more control over cv2 windowing and the tree structure
-
-## Functional Requirements
-
-1. The package must support the creation of a tree-like structure to join together Digital Image Processing steps
-   1. Each node on the tree must get the state of its parent when that parent updates
-   2. The operation of each node on the tree must be user-adjustable via sliders 
-2. The package must 
-
-## Non-Functional Requirements
-1. Balance between flexibilty and ease of implementation for the user
-2. Facilitate observability of intermediate states in the pipeline
-3. Facilitate adjustability of operations in the pipeline, both in code and at run time
 
 ## Notes for Future Improvements
 
