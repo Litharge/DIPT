@@ -34,7 +34,6 @@ class HueBoundaryAdjuster(CustomImageTool):
         super().__init__(input_image, window_name)
 
     def matrix_operation(self):
-        cv2.setWindowTitle(self.window_name, "My New Window " + str(datetime.now()))
         self.buffer_image = np.where((self.input.get_image() > self.hue_min_val) & (self.input.get_image() < self.hue_max_val), 255,
                               0).astype(
             np.uint8)
