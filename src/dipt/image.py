@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 import time
 from time import monotonic
+import logging
 
 
 import cv2
@@ -18,7 +19,6 @@ class DisplayException(Exception):
 
 class ImageTool:
     def add_child(self, to_add):
-        print("adding child", to_add, "to", self)
         self.children.append(to_add)
 
     def notify_children(self):
@@ -30,9 +30,6 @@ class ImageTool:
     def check_if_changed(self):
         while True:
             if self.parent_changed:
-                print("parent changed, updating")
-                # todo: actually just update the array
-                #  imshow() then needs to be run in the main thread loop
                 self.update_matrix()
                 self.parent_changed = False
             time.sleep(1)
@@ -68,13 +65,15 @@ class ImageTool:
                 raise DisplayException("Error displaying with cv2.imshow in base display method. "
                       "Check that your input image is not None.")
 
-        cv2.setWindowTitle(self.window_name, new_title)
+        self.window_title = new_title
 
     def display_loop(self, refresh_ms=100):
         """
         Frames refresh each self.refresh_ms miliseconds or longer
         """
         while True:
+            cv2.setWindowTitle(self.window_name, self.window_title)
+
             old_time = int(monotonic() * 1000)
 
             self.display_recursively()
@@ -98,6 +97,9 @@ class ImageTool:
         """
         self.window_name = window_name
         cv2.namedWindow(self.window_name)
+
+        # window_title is what is displayed
+        self.window_title = "Image not initialised"
 
         self.display_blank_on_error = True
 
@@ -127,7 +129,11 @@ class CustomImageTool(ImageTool, ABC):
     def update_matrix(self):
         self.notify_children()
 
+        start = time.thread_time()
+
         self.matrix_operation()
+
+        self.elapsed = time.thread_time() - start
 
         with self.matrix_lock:
             self.image = self.buffer_image
@@ -139,6 +145,8 @@ class CustomImageTool(ImageTool, ABC):
 
     def __init__(self, input_image: ImageTool, window_name):
         super().__init__(input_image, window_name)
+
+        self.elapsed = 0
 
         self.buffer_image = None
 
