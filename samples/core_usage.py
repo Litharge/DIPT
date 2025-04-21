@@ -19,8 +19,6 @@ class HueImage(CustomImageTool):
         # the hue_channel channel is in the range 0-179, referring to angle on the colour wheel divided by 2
         hue_channel = hls[:, :, 0]
 
-        print(hue_channel.max())
-
         # convert to uint8 range (0-255), also rotate by 128 to place the discontinuity at the blue end
         self.buffer_image = ((hue_channel * (256 / 180)) + self.discontinuity_val).astype(np.uint8)
 
@@ -77,8 +75,6 @@ class HoleRemover(CustomImageTool):
         three_channel = three_channel[:, :, np.newaxis]
         three_channel = np.repeat(three_channel, 3, axis=2)
 
-        print(f"{len(contours)=}")
-
         line_width = -1 if self.remove_holes_val else 1
 
         self.buffer_image = None
@@ -87,17 +83,16 @@ class HoleRemover(CustomImageTool):
 
 original_image = cv2.imread("strawberry_2.png", cv2.IMREAD_COLOR_BGR)
 
-initial = SimpleImage(original_image, "initial")
+initial = SimpleImage(original_image, "initial image")
 
 hue = HueImage(initial, "hue")
 
-hue_band = HueBoundaryAdjuster(hue, "hue band")
+hue_band = HueBoundaryAdjuster(hue, "hue band selection")
 
-hole_filled = HoleRemover(hue_band, "hole filled")
+hole_filled = HoleRemover(hue_band, "hole filled (branch 1)")
 
-# NoiseRemover is actually not suitable, the
-red_noise_remover = NoiseRemover(hue_band, "noise removed")
+red_noise_remover = NoiseRemover(hue_band, "noise removed (branch 2)")
 
-hole_filled_2 = HoleRemover(red_noise_remover, "hole filled after noise removed")
+hole_filled_2 = HoleRemover(red_noise_remover, "hole filled after noise removed (branch 2)")
 
 initial.display_loop(refresh_ms=100)
