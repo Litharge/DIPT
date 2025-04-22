@@ -21,8 +21,6 @@ class HueImage(ImageTool):
         # the hue_channel channel is in the range 0-179, referring to angle on the colour wheel divided by 2
         hue_channel = hls[:, :, 0]
 
-        print(hue_channel.max())
-
         # convert to uint8 range (0-255), also rotate by 128 to place the discontinuity at the blue end
         hue = ((hue_channel * (256 / 180)) + self.discontinuity).astype(np.uint8)
 
@@ -118,8 +116,6 @@ class HoleRemover(ImageTool):
         three_channel = np.zeros_like(self.input.get_image())
         three_channel = three_channel[:, :, np.newaxis]
         three_channel = np.repeat(three_channel, 3, axis=2)
-
-        print(f"{len(contours)=}")
 
         line_width = -1 if self.remove_holes else 1
 

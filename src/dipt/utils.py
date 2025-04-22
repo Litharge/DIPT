@@ -21,9 +21,6 @@ def rename_nodes_to_ids(nested_dict, edges):
     node_to_id = {node: i for i, node in enumerate(unique_nodes)}  # Sort for consistency
 
     # Replace names with IDs in edges
-    print("line 19")
-    print(edges)
-    print(node_to_id)
     id_edges = [(node_to_id[parent], node_to_id[child]) for parent, child in edges]
     id_to_node = {node_to_id[key]: key for key in node_to_id}
     return id_edges, id_to_node, node_to_id  # Return edges and mapping
