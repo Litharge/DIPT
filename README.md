@@ -20,14 +20,14 @@ See samples/core_usage.py for an example of a simple tree
 
 ### Defining an Operation
 
-Override CustomImageTool to define a new, adjustable operation e.g. adjustable noise removal
+Override `CustomImageTool` to define a new, adjustable operation e.g. adjustable noise removal
 
 Simply override the \_\_init\_\_ and matrix_operation methods
 
-The \_\_init\_\_ method contains any slider variables you intend to use in your matrix_operation, as well as the maximum 
+The `\_\_init\_\_` method should contain any slider variables you intend to use in your matrix_operation, as well as the maximum 
 values of those slider variables. 
 
-The matrix_operation method contains your operation (e.g. morphological, convolutional). Get the contents of 
+The `matrix_operation` method should contain your operation (e.g. morphological, convolutional). Get the contents of 
 the parent node with self.input.get_image(), perform your operation and save your result in self.buffer_image.
 
 You must use self.input.get_image() and not self.input.image as the matrix may be accessed in another thread, get_image
@@ -38,6 +38,11 @@ opens the lock.
 Create the root node by creating an instance of SimpleImage, passing in your original image as an ndarray, as well as a unique window name.
 Define descendants by creating instances of your operations and passing the parent node, as well as a unique window name.
 Begin rendering by calling `display_loop` on your root element
+
+### Controls
+
+Once your program is running, you can press "q" to quit, and you can press "r" to refresh the matrices and print the 
+duration of each matrix update for those nodes with `should_log_duration` set.
 
 ## Advanced Usage
 
