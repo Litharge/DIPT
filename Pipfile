@@ -7,6 +7,7 @@ name = "pypi"
 numpy = "*"
 opencv-python = "*"
 dipt = {file = ".", editable = true}
+igraph = "*"
 
 [dev-packages]
 

@@ -7,10 +7,15 @@ from datetime import datetime
 import time
 from time import monotonic
 import logging
+from pprint import pprint
 
 
 import cv2
 import numpy as np
+from igraph import Graph
+
+
+from dipt.utils import nested_dict_to_edges, rename_nodes_to_ids
 
 
 class DisplayException(Exception):
@@ -67,10 +72,54 @@ class ImageTool:
 
         self.window_title = new_title
 
+    def get_desc_dict(self):
+
+        if len(self.children) > 0:
+            return {child.window_name: child.get_desc_dict() for child in self.children}
+        else:
+            return {}
+
+    def get_new_window_positions_dict(self):
+        """Gets a dictionary containing coordinates to move the windows to, in order to form a nice visual tree"""
+
+        # first recursively traverse children to make nested dictionary
+        desc_dict = {self.window_name: self.get_desc_dict()}
+        print(f"{desc_dict=}")
+
+        # convert nested dictionary to edges
+        edges = nested_dict_to_edges(desc_dict)
+        print(f"{edges=}")
+        numeric_edges, id_to_name = rename_nodes_to_ids(edges)
+        print(f"{numeric_edges=}")
+        print(f"{id_to_name=}")
+
+        # convert numeric edges to positions
+        g = Graph(directed=True)
+        g.add_vertices(len(id_to_name))
+        g.add_edges(numeric_edges)
+        layout = g.layout("rt")  # Reingold-Tilford layout
+        print(layout.coords)
+
+        # build coords dictionary
+        coords = {id_to_name[id]: layout[id] for id in id_to_name}
+        print(f"{coords=}")
+
+        return coords
+
+    def set_window_positions_recursively(self, tree_coords):
+        x = int(tree_coords[self.window_name][0] * 100) + 200
+        y = int(tree_coords[self.window_name][1] * 100) + 10
+        print(f"{x=} {y=}")
+        cv2.moveWindow(self.window_name, x, y)
+        for child in self.children:
+            child.set_window_positions_recursively(tree_coords)
+
     def display_loop(self, refresh_ms=100):
         """
         Frames refresh each self.refresh_ms miliseconds or longer
         """
+        tree_coords = self.get_new_window_positions_dict()
+        self.set_window_positions_recursively(tree_coords)
 
         while True:
             cv2.setWindowTitle(self.window_name, self.window_title)
