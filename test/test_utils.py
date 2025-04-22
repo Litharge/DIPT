@@ -9,11 +9,12 @@ class TestGraph(unittest.TestCase):
                          set([("A", "B"), ("A", "C"), ("B", "D"), ("C", "E"), ("D", "F")]))
 
     def test_rename_nodes_to_ids(self):
+        test_dict = {"A": {"B": {"D": {"F": {}}}, "C": {"E": {}}}}
         test_edges = [("A", "B"), ("A", "C"), ("B", "D"), ("C", "E"), ("D", "F")]
-        id_edges, id_to_node = rename_nodes_to_ids(test_edges)
+        id_edges, id_to_node, node_to_id = rename_nodes_to_ids(test_dict, test_edges)
         print(id_edges)
         print(id_to_node)
-        # nodes are sorted, so we would expect A=0, B=1, ...
+        # nodes are sorted breadth first, so we would expect A=0, B=1, ...
         expected_renaming = set([(0, 1), (0, 2), (1, 3), (2, 4), (3, 5)])
         self.assertEqual(set(id_edges), expected_renaming)
 
