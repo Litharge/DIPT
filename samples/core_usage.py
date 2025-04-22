@@ -25,8 +25,8 @@ class HueImage(CustomImageTool):
 
 class HueBoundaryAdjuster(CustomImageTool):
     def __init__(self, input_image, window_name, **kwargs):
-        self.hue_min_val = 126
-        self.hue_max_val = 141
+        self.hue_min_val = 112
+        self.hue_max_val = 144
 
         self.hue_min_val_max = 255
         self.hue_max_val_max = 255
