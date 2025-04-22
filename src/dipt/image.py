@@ -71,6 +71,7 @@ class ImageTool:
         """
         Frames refresh each self.refresh_ms miliseconds or longer
         """
+
         while True:
             cv2.setWindowTitle(self.window_name, self.window_title)
 
@@ -84,6 +85,9 @@ class ImageTool:
             k = cv2.waitKey(refresh_ms - diff)
             if k == ord("q"):
                 break
+            if k == ord("r"):
+                #self.notify_children()
+                self.update_matrix()
 
         self.terminate_recursively()
 
@@ -135,6 +139,9 @@ class CustomImageTool(ImageTool, ABC):
 
         self.elapsed = time.thread_time() - start
 
+        if self.should_log_duration:
+            self.logger.info(f"Time for <{self.window_name}> to update matrix: {self.elapsed} seconds")
+
         with self.matrix_lock:
             self.image = self.buffer_image
 
@@ -143,8 +150,18 @@ class CustomImageTool(ImageTool, ABC):
 
         self.update_matrix()
 
-    def __init__(self, input_image: ImageTool, window_name):
+    def __init__(self, input_image: ImageTool, window_name, should_log_duration=False):
         super().__init__(input_image, window_name)
+
+        # set up logger (thread safe unlike print)
+        formatter = logging.Formatter('%(message)s')
+        self.logger = logging.getLogger(self.window_name)
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        self.logger.addHandler(console_handler)
+        self.logger.setLevel(logging.DEBUG)
+
+        self.should_log_duration = should_log_duration
 
         self.elapsed = 0
 
@@ -178,3 +195,6 @@ class SimpleImage(ImageTool):
         """
         super().__init__(input_image, window_name)
         self.image = self.input
+
+    def update_matrix(self):
+        self.notify_children()
