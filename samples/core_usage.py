@@ -88,10 +88,10 @@ hue = HueImage(initial, "hue")
 
 hue_band = HueBoundaryAdjuster(hue, "hue band selection")
 
-hole_filled = HoleRemover(hue_band, "hole filled (branch 1)", should_log_duration=True)
+hole_filled = HoleRemover(hue_band, "hole filled", should_log_duration=True)
 
-red_noise_remover = NoiseRemover(hue_band, "noise removed (branch 2)", should_log_duration=True)
+red_noise_remover = NoiseRemover(hue_band, "noise removed", should_log_duration=True)
 
-hole_filled_2 = HoleRemover(red_noise_remover, "hole filled after noise removed (branch 2)", should_log_duration=True)
+hole_filled_2 = HoleRemover(red_noise_remover, "hole filled after noise removed", should_log_duration=True)
 
 initial.display_loop(refresh_ms=100)

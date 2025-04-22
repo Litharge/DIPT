@@ -70,7 +70,7 @@ class ImageTool:
                 raise DisplayException("Error displaying with cv2.imshow in base display method. "
                       "Check that your input image is not None.")
 
-        self.window_title = new_title
+        self.window_title = new_title + self.window_title_tree_component
 
     def get_desc_dict(self):
 
@@ -79,50 +79,62 @@ class ImageTool:
         else:
             return {}
 
-    def get_new_window_positions_dict(self):
-        """Gets a dictionary containing coordinates to move the windows to, in order to form a nice visual tree"""
+    def get_new_window_tree_info(self):
+        """Gets a dictionary containing coordinates to move the windows to, in order to form a nice visual tree
+        Also returns the mapping from names to numbers for constructing the window title
+        """
 
         # first recursively traverse children to make nested dictionary
         desc_dict = {self.window_name: self.get_desc_dict()}
-        print(f"{desc_dict=}")
 
         # convert nested dictionary to edges
         edges = nested_dict_to_edges(desc_dict)
-        print(f"{edges=}")
-        numeric_edges, id_to_name = rename_nodes_to_ids(edges)
-        print(f"{numeric_edges=}")
-        print(f"{id_to_name=}")
+        numeric_edges, id_to_name, name_to_id = rename_nodes_to_ids(desc_dict, edges)
 
         # convert numeric edges to positions
         g = Graph(directed=True)
         g.add_vertices(len(id_to_name))
         g.add_edges(numeric_edges)
         layout = g.layout("rt")  # Reingold-Tilford layout
-        print(layout.coords)
 
         # build coords dictionary
         coords = {id_to_name[id]: layout[id] for id in id_to_name}
-        print(f"{coords=}")
 
-        return coords
+        return coords, name_to_id
 
     def set_window_positions_recursively(self, tree_coords):
         x = int(tree_coords[self.window_name][0] * 100) + 200
         y = int(tree_coords[self.window_name][1] * 100) + 10
-        print(f"{x=} {y=}")
         cv2.moveWindow(self.window_name, x, y)
         for child in self.children:
             child.set_window_positions_recursively(tree_coords)
+
+    def set_window_title_tree_component_recursively(self, name_to_id, ancestor_lineage):
+        id_of_current = name_to_id[self.window_name]
+        if ancestor_lineage == "":
+            self.window_title_tree_component = str(id_of_current)
+        else:
+            self.window_title_tree_component = ancestor_lineage + "." + str(id_of_current)
+
+        cv2.setWindowTitle(self.window_name, self.window_name + " " + self.window_title_tree_component)
+
+        for child in self.children:
+            child.set_window_title_tree_component_recursively(name_to_id, self.window_title_tree_component)
+
 
     def display_loop(self, refresh_ms=100):
         """
         Frames refresh each self.refresh_ms miliseconds or longer
         """
-        tree_coords = self.get_new_window_positions_dict()
+        tree_coords, name_to_id = self.get_new_window_tree_info()
+
         self.set_window_positions_recursively(tree_coords)
 
+        self.set_window_title_tree_component_recursively(name_to_id, "")
+
         while True:
-            cv2.setWindowTitle(self.window_name, self.window_title)
+            # todo: should this line be here?
+            #cv2.setWindowTitle(self.window_name, self.window_title + "test test")
 
             old_time = int(monotonic() * 1000)
 
@@ -153,6 +165,8 @@ class ImageTool:
 
         # window_title is what is displayed
         self.window_title = "Image not initialised"
+
+        self.window_title_tree_component = ""
 
         self.display_blank_on_error = True
 
