@@ -58,13 +58,6 @@ class NoiseRemover(CustomImageTool):
 
 
 class HoleRemover(CustomImageTool):
-    def __init__(self, input_image, window_name, **kwargs):
-        self.remove_holes_val = 1
-
-        self.remove_holes_val_max = 1
-
-        super().__init__(input_image, window_name, **kwargs)
-
     def matrix_operation(self):
         contours, _ = cv2.findContours(self.input.get_image(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -73,7 +66,7 @@ class HoleRemover(CustomImageTool):
         three_channel = three_channel[:, :, np.newaxis]
         three_channel = np.repeat(three_channel, 3, axis=2)
 
-        line_width = -1 if self.remove_holes_val else 1
+        line_width = -1
 
         self.buffer_image = None
         for ct in contours:
