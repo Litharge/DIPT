@@ -36,8 +36,8 @@ class ImageTool:
         while True:
             if self.parent_changed:
                 self.update_matrix()
-                self.parent_changed = False
-            time.sleep(1)
+            # todo: this is seconds, use more reasonable value
+            time.sleep(0.05)
 
             if self.kill_thread.is_set():
                 break
@@ -147,8 +147,10 @@ class ImageTool:
             if k == ord("q"):
                 break
             if k == ord("r"):
-                #self.notify_children()
+                self.nth_refresh += 1
+                self.logger.info(f"{self.nth_refresh} manual refresh")
                 self.update_matrix()
+                self.notify_children()
 
         self.terminate_recursively()
 
@@ -178,9 +180,23 @@ class ImageTool:
         self.input = input_image
         self.parent_changed = False
 
+        # set up logger (thread safe unlike print)
+        formatter = logging.Formatter('%(message)s')
+        self.logger = logging.getLogger(self.window_name)
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        self.logger.addHandler(console_handler)
+        self.logger.setLevel(logging.DEBUG)
+
+        self.nth_refresh = 0
+
         if isinstance(input_image, ImageTool):
             # input_image is the parent in the tree, so we want changes to cascade down
             input_image.add_child(self)
+            # initialise image to the parent image, as update_matrix wont be run until the thread first reaches it
+            # actually remove this, parent may have wrong no. channels
+            self.image = self.input.image
+
 
         self.kill_thread = threading.Event()
 
@@ -194,7 +210,7 @@ class CustomImageTool(ImageTool, ABC):
         pass
 
     def update_matrix(self):
-        self.notify_children()
+        self.parent_changed = False
 
         start = time.thread_time()
 
@@ -212,17 +228,10 @@ class CustomImageTool(ImageTool, ABC):
         setattr(self, to_change, val)
 
         self.update_matrix()
+        self.notify_children()
 
     def __init__(self, input_image: ImageTool, window_name, should_log_duration=False):
         super().__init__(input_image, window_name)
-
-        # set up logger (thread safe unlike print)
-        formatter = logging.Formatter('%(message)s')
-        self.logger = logging.getLogger(self.window_name)
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(formatter)
-        self.logger.addHandler(console_handler)
-        self.logger.setLevel(logging.DEBUG)
 
         self.should_log_duration = should_log_duration
 
@@ -244,8 +253,8 @@ class CustomImageTool(ImageTool, ABC):
         # if there are no trackbars created, then update_matrix is not called until a change in the parent is detected.
         # also, if the trackbar values are initialised at 0, then it appears the callback does not run either
         # So, manually call update_matrix here
-        if len(bar_vars) == 0 or all_zero:
-            self.update_matrix()
+        #if len(bar_vars) == 0 or all_zero:
+        self.update_matrix()
 
 
 class SimpleImage(ImageTool):
@@ -259,5 +268,5 @@ class SimpleImage(ImageTool):
         super().__init__(input_image, window_name)
         self.image = self.input
 
-    def update_matrix(self):
-        self.notify_children()
+    #def update_matrix(self):
+    #    self.notify_children()
