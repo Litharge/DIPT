@@ -34,9 +34,10 @@ class HueBoundaryAdjuster(CustomImageTool):
         super().__init__(input_image, window_name, **kwargs)
 
     def matrix_operation(self):
-        self.buffer_image = np.where((self.input.get_image() > self.hue_min_val) & (self.input.get_image() < self.hue_max_val), 255,
-                              0).astype(
-            np.uint8)
+        self.buffer_image = np.where(
+            (self.input.get_image() > self.hue_min_val) & (self.input.get_image() < self.hue_max_val),
+            255,
+            0).astype(np.uint8)
 
 
 class NoiseRemover(CustomImageTool):
@@ -50,7 +51,9 @@ class NoiseRemover(CustomImageTool):
     def matrix_operation(self):
         if self.erosion_dilation_radius_val > 0:
             ellipse = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
-                                                (2 * self.erosion_dilation_radius_val - 1, 2 * self.erosion_dilation_radius_val - 1))
+                                                (2 * self.erosion_dilation_radius_val - 1,
+                                                 2 * self.erosion_dilation_radius_val - 1)
+                                                )
             eroded = cv2.erode(self.input.get_image(), ellipse)
             self.buffer_image = cv2.dilate(eroded, ellipse)
         else:
