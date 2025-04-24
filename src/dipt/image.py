@@ -23,48 +23,48 @@ class DisplayException(Exception):
 
 
 class ImageTool:
-    def add_child(self, to_add):
+    def _add_child(self, to_add):
         self.children.append(to_add)
 
-    def notify_self(self):
+    def _notify_self(self):
         """Notify myself that I have changed"""
         self.parent_changed = True
 
-    def notify_children(self):
+    def _notify_children(self):
         """Notify my children that I have changed"""
         for child in self.children:
             child.parent_changed = True
 
-    def check_if_changed(self):
+    def _check_if_changed(self):
         """This polls continuously and updates the matrix if the parent has changed. Intended to be run in a dedicated
         thread"""
         while True:
             if self.parent_changed:
-                self.update_matrix()
+                self._update_matrix()
                 self.parent_changed = False
-                self.notify_children()
+                self._notify_children()
 
             time.sleep(0.05)
 
             if self.kill_thread.is_set():
                 break
 
-    def update_matrix(self):
+    def _update_matrix(self):
         pass
 
     def get_image(self):
         with self.matrix_lock:
             return self.image
 
-    def terminate_recursively(self):
+    def _terminate_recursively(self):
         """End the matrix update listener thread for self and all descendents"""
         self.kill_thread.set()
         for child in self.children:
-            child.terminate_recursively()
+            child._terminate_recursively()
 
-    def display_recursively(self):
+    def _display_recursively(self):
         for child in self.children:
-            child.display_recursively()
+            child._display_recursively()
 
         new_title = self.window_name
 
@@ -79,20 +79,20 @@ class ImageTool:
 
         self.window_title = new_title + self.window_title_tree_component
 
-    def get_desc_dict(self):
+    def _get_desc_dict(self):
 
         if len(self.children) > 0:
-            return {child.window_name: child.get_desc_dict() for child in self.children}
+            return {child.window_name: child._get_desc_dict() for child in self.children}
         else:
             return {}
 
-    def get_new_window_tree_info(self):
+    def _get_new_window_tree_info(self):
         """Gets a dictionary containing coordinates to move the windows to, in order to form a nice visual tree
         Also returns the mapping from names to numbers for constructing the window title
         """
 
         # first recursively traverse children to make nested dictionary
-        desc_dict = {self.window_name: self.get_desc_dict()}
+        desc_dict = {self.window_name: self._get_desc_dict()}
 
         # convert nested dictionary to edges
         edges = nested_dict_to_edges(desc_dict)
@@ -109,14 +109,14 @@ class ImageTool:
 
         return coords, name_to_id
 
-    def set_window_positions_recursively(self, tree_coords):
+    def _set_window_positions_recursively(self, tree_coords):
         x = int(tree_coords[self.window_name][0] * 100) + 200
         y = int(tree_coords[self.window_name][1] * 100) + 10
         cv2.moveWindow(self.window_name, x, y)
         for child in self.children:
-            child.set_window_positions_recursively(tree_coords)
+            child._set_window_positions_recursively(tree_coords)
 
-    def set_window_title_tree_component_recursively(self, name_to_id, ancestor_lineage):
+    def _set_window_title_tree_component_recursively(self, name_to_id, ancestor_lineage):
         id_of_current = name_to_id[self.window_name]
         if ancestor_lineage == "":
             self.window_title_tree_component = str(id_of_current)
@@ -126,26 +126,22 @@ class ImageTool:
         cv2.setWindowTitle(self.window_name, self.window_name + " " + self.window_title_tree_component)
 
         for child in self.children:
-            child.set_window_title_tree_component_recursively(name_to_id, self.window_title_tree_component)
-
+            child._set_window_title_tree_component_recursively(name_to_id, self.window_title_tree_component)
 
     def display_loop(self, refresh_ms=100):
         """
         Frames refresh each self.refresh_ms miliseconds or longer
         """
-        tree_coords, name_to_id = self.get_new_window_tree_info()
+        tree_coords, name_to_id = self._get_new_window_tree_info()
 
-        self.set_window_positions_recursively(tree_coords)
+        self._set_window_positions_recursively(tree_coords)
 
-        self.set_window_title_tree_component_recursively(name_to_id, "")
+        self._set_window_title_tree_component_recursively(name_to_id, "")
 
         while True:
-            # todo: should this line be here?
-            #cv2.setWindowTitle(self.window_name, self.window_title + "test test")
-
             old_time = int(monotonic() * 1000)
 
-            self.display_recursively()
+            self._display_recursively()
 
             new_time = int(monotonic() * 1000)
             diff = new_time - old_time
@@ -156,9 +152,9 @@ class ImageTool:
             if k == ord("r"):
                 self.nth_refresh += 1
                 self.logger.info(f"{self.nth_refresh} manual refresh")
-                self.notify_self()
+                self._notify_self()
 
-        self.terminate_recursively()
+        self._terminate_recursively()
 
         cv2.destroyAllWindows()
 
@@ -198,14 +194,14 @@ class ImageTool:
 
         if isinstance(input_image, ImageTool):
             # input_image is the parent in the tree, so we want changes to cascade down
-            input_image.add_child(self)
+            input_image._add_child(self)
             # initialise image to the parent image, as update_matrix wont be run until the thread first reaches it
             # actually remove this, parent may have wrong no. channels
             self.image = self.input.image
 
         self.kill_thread = threading.Event()
 
-        self.thread = threading.Thread(target=self.check_if_changed)
+        self.thread = threading.Thread(target=self._check_if_changed)
         self.thread.start()
 
 
@@ -214,7 +210,7 @@ class CustomImageTool(ImageTool, ABC):
     def matrix_operation(self):
         pass
 
-    def update_matrix(self):
+    def _update_matrix(self):
         self.parent_changed = False
 
         start = time.thread_time()
@@ -229,10 +225,10 @@ class CustomImageTool(ImageTool, ABC):
         with self.matrix_lock:
             self.image = self.buffer_image
 
-    def bar_changed(self, to_change, val):
+    def _bar_changed(self, to_change, val):
         setattr(self, to_change, val)
 
-        self.notify_self()
+        self._notify_self()
 
     def __init__(self, input_image: ImageTool, window_name, should_log_duration=False):
         super().__init__(input_image, window_name)
@@ -250,7 +246,7 @@ class CustomImageTool(ImageTool, ABC):
         self.partial_callbacks = {}
         for var_name in bar_vars_max:
             cv2.createTrackbar(var_name, self.window_name, bar_vars_initial[var_name], bar_vars_max[var_name],
-                               partial(self.bar_changed, var_name))
+                               partial(self._bar_changed, var_name))
 
         all_zero = not any([bar_vars_initial[v] for v in bar_vars_initial])
 
@@ -258,7 +254,7 @@ class CustomImageTool(ImageTool, ABC):
         # also, if the trackbar values are initialised at 0, then it appears the callback does not run either
         # So, manually call update_matrix here
         #if len(bar_vars) == 0 or all_zero:
-        self.update_matrix()
+        self._update_matrix()
 
 
 class SimpleImage(ImageTool):

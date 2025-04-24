@@ -13,8 +13,8 @@ class HueImage(ImageTool):
 
         cv2.createTrackbar("min", self.window_name, self.discontinuity, 255, self.discontinuity_changed)
 
-    def update_matrix(self):
-        #self.notify_self_and_children()
+    def _update_matrix(self):
+        self.parent_changed = False
 
         hls = cv2.cvtColor(self.input.get_image(), cv2.COLOR_BGR2HSV)
 
@@ -30,7 +30,7 @@ class HueImage(ImageTool):
     def discontinuity_changed(self, val):
         self.discontinuity = val
 
-        self.notify_self()
+        self._notify_self()
 
 
 # now get pixels in range
@@ -38,15 +38,15 @@ class HueBoundaryAdjuster(ImageTool):
     def min_changed(self, val):
         self.hue_min = val
 
-        self.notify_self()
+        self._notify_self()
 
     def max_changed(self, val):
         self.hue_max = val
 
-        self.notify_self()
+        self._notify_self()
 
-    def update_matrix(self):
-        #self.notify_self_and_children()
+    def _update_matrix(self):
+        self.parent_changed = False
 
         buffer_image = np.where((self.input.get_image() > self.hue_min) & (self.input.get_image() < self.hue_max), 255, 0).astype(
                 np.uint8)
@@ -76,15 +76,15 @@ class NoiseRemover(ImageTool):
                            self.erosion_dilation_radius_val_max, self.erosion_changed)
 
         if self.erosion_dilation_radius_val == 0:
-            self.notify_self()
+            self._notify_self()
 
     def erosion_changed(self, val):
         self.erosion_dilation_radius_val = val
 
-        self.notify_self()
+        self._notify_self()
 
-    def update_matrix(self):
-        #self.notify_self_and_children()
+    def _update_matrix(self):
+        self.parent_changed = False
 
         if self.erosion_dilation_radius_val > 0:
             ellipse = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
@@ -104,10 +104,10 @@ class HoleRemover(ImageTool):
     def remove_holes_changed(self, val):
         self.remove_holes = val
 
-        self.notify_self()
+        self._notify_self()
 
-    def update_matrix(self):
-        #self.notify_self_and_children()
+    def _update_matrix(self):
+        self.parent_changed = False
 
         contours, _ = cv2.findContours(self.input.get_image(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
