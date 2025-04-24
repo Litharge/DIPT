@@ -26,17 +26,24 @@ class ImageTool:
     def add_child(self, to_add):
         self.children.append(to_add)
 
+    def notify_self(self):
+        """Notify myself that I have changed"""
+        self.parent_changed = True
+
     def notify_children(self):
         """Notify my children that I have changed"""
         for child in self.children:
             child.parent_changed = True
-            child.notify_children()
 
     def check_if_changed(self):
+        """This polls continuously and updates the matrix if the parent has changed. Intended to be run in a dedicated
+        thread"""
         while True:
             if self.parent_changed:
                 self.update_matrix()
-            # todo: this is seconds, use more reasonable value
+                self.parent_changed = False
+                self.notify_children()
+
             time.sleep(0.05)
 
             if self.kill_thread.is_set():
@@ -149,8 +156,7 @@ class ImageTool:
             if k == ord("r"):
                 self.nth_refresh += 1
                 self.logger.info(f"{self.nth_refresh} manual refresh")
-                self.update_matrix()
-                self.notify_children()
+                self.notify_self()
 
         self.terminate_recursively()
 
@@ -197,7 +203,6 @@ class ImageTool:
             # actually remove this, parent may have wrong no. channels
             self.image = self.input.image
 
-
         self.kill_thread = threading.Event()
 
         self.thread = threading.Thread(target=self.check_if_changed)
@@ -227,8 +232,7 @@ class CustomImageTool(ImageTool, ABC):
     def bar_changed(self, to_change, val):
         setattr(self, to_change, val)
 
-        self.update_matrix()
-        self.notify_children()
+        self.notify_self()
 
     def __init__(self, input_image: ImageTool, window_name, should_log_duration=False):
         super().__init__(input_image, window_name)
@@ -268,5 +272,3 @@ class SimpleImage(ImageTool):
         super().__init__(input_image, window_name)
         self.image = self.input
 
-    #def update_matrix(self):
-    #    self.notify_children()
