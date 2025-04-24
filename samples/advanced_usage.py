@@ -16,7 +16,7 @@ class HueImage(ImageTool):
     def _update_matrix(self):
         self.parent_changed = False
 
-        hls = cv2.cvtColor(self.input.get_image(), cv2.COLOR_BGR2HSV)
+        hls = cv2.cvtColor(self.input._get_image(), cv2.COLOR_BGR2HSV)
 
         # the hue_channel channel is in the range 0-179, referring to angle on the colour wheel divided by 2
         hue_channel = hls[:, :, 0]
@@ -48,7 +48,7 @@ class HueBoundaryAdjuster(ImageTool):
     def _update_matrix(self):
         self.parent_changed = False
 
-        buffer_image = np.where((self.input.get_image() > self.hue_min) & (self.input.get_image() < self.hue_max), 255, 0).astype(
+        buffer_image = np.where((self.input._get_image() > self.hue_min) & (self.input._get_image() < self.hue_max), 255, 0).astype(
                 np.uint8)
 
         with self.matrix_lock:
@@ -90,10 +90,10 @@ class NoiseRemover(ImageTool):
             ellipse = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
                                                 (2 * self.erosion_dilation_radius_val - 1,
                                                  2 * self.erosion_dilation_radius_val - 1))
-            eroded = cv2.erode(self.input.get_image(), ellipse)
+            eroded = cv2.erode(self.input._get_image(), ellipse)
             buffer_image = cv2.dilate(eroded, ellipse)
         else:
-            buffer_image = self.input.get_image()
+            buffer_image = self.input._get_image()
 
         with self.matrix_lock:
             self.image = buffer_image
@@ -109,11 +109,11 @@ class HoleRemover(ImageTool):
     def _update_matrix(self):
         self.parent_changed = False
 
-        contours, _ = cv2.findContours(self.input.get_image(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(self.input._get_image(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         # create a 3-channel array with the same height and width as input image
         # todo: make this a helper function
-        three_channel = np.zeros_like(self.input.get_image())
+        three_channel = np.zeros_like(self.input._get_image())
         three_channel = three_channel[:, :, np.newaxis]
         three_channel = np.repeat(three_channel, 3, axis=2)
 

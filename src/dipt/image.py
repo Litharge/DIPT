@@ -52,7 +52,7 @@ class ImageTool:
     def _update_matrix(self):
         pass
 
-    def get_image(self):
+    def _get_image(self):
         with self.matrix_lock:
             return self.image
 
@@ -69,7 +69,7 @@ class ImageTool:
         new_title = self.window_name
 
         try:
-            cv2.imshow(self.window_name, self.get_image())
+            cv2.imshow(self.window_name, self._get_image())
         except Exception as e:
             if self.display_blank_on_error:
                 new_title = "Error displaying image"
@@ -207,7 +207,7 @@ class ImageTool:
 
 class CustomImageTool(ImageTool, ABC):
     @abstractmethod
-    def matrix_operation(self):
+    def _matrix_operation(self):
         pass
 
     def _update_matrix(self):
@@ -215,7 +215,7 @@ class CustomImageTool(ImageTool, ABC):
 
         start = time.thread_time()
 
-        self.matrix_operation()
+        self._matrix_operation()
 
         self.elapsed = time.thread_time() - start
 
