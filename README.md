@@ -24,20 +24,20 @@ See samples/core_usage.py for an example of a simple implementation.
 
 Override `CustomImageTool` to define a new, adjustable operation e.g. adjustable noise removal
 
-Simply override the `\_\_init\_\_` and `matrix_operation` methods
+Simply override the `__init__` and `matrix_operation` methods
 
-#### `\_\_init\_\_`
+#### `__init__`
 
-The `\_\_init\_\_` method should contain any slider variables you intend to use in your `matrix_operation`, as well as
-the maximum values of those slider variables. If you are not using slider variables, no `\_\_init\_\_` is needed.
+The `__init__` method should contain any slider variables you intend to use in your `matrix_operation`, as well as
+the maximum values of those slider variables. If you are not using slider variables, no `__init__` is needed.
 
 Slider variable names must end with "_val". The maximum for each slider variable should be declared as a new variable
 with the same name, with "_max" appended.
 
-Your `\_\_init\_\_` method must call the superclass `\_\_init\_\_` method and pass in `input_image, window_name,
+Your `__init__` method must call the superclass `__init__` method and pass in `input_image, window_name,
 **kwargs`.
 
-Your `\_\_init\_\_` method must have the parameters input_image, window_name, **kwargs
+Your `__init__` method must have the parameters input_image, window_name, **kwargs
 
 #### `matrix_operation`
 
