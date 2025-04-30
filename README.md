@@ -4,6 +4,8 @@ Digital Image Processing Tree (DIPT) is an easy-to-use package for the creation 
 pipelines. The user can quickly define new operations and add them to pipelines in a tree-like structure, where the root
 is the original image.
 
+[Demonstration of package](https://www.youtube.com/watch?v=kr2Hk4-GK4Y)
+
 ## Installation
 
 Clone the repository
